@@ -145,6 +145,19 @@
             border-color: var(--primary);
         }
 
+        .auth-switch {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .auth-switch span {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
         .error-msg {
             background: #fef2f2;
             color: var(--danger);
@@ -227,9 +240,9 @@
             </div>
         </header>
 
-        <!-- 1. MÀN HÌNH ĐĂNG NHẬP GIÁO VIÊN -->
+        <!-- 1. MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ HỌC SINH & GIÁO VIÊN -->
         <div id="auth-container" class="card" style="max-width: 400px; margin: 0 auto;">
-            <h2 style="text-align: center; margin-bottom: 20px;">Đăng Nhập Giáo Viên</h2>
+            <h2 id="auth-title" style="text-align: center; margin-bottom: 20px;">Đăng Nhập Hệ Thống</h2>
             
             <div id="error-alert" class="error-msg"></div>
 
@@ -243,15 +256,18 @@
                 <input type="password" id="auth-password" placeholder="Nhập mật khẩu...">
             </div>
 
-            <button class="btn" onclick="processTeacherLogin()" style="width: 100%; margin-top: 10px;">Đăng Nhập Quản Trị</button>
-            <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Dành riêng cho giáo viên ra đề. Học sinh vào làm bài trực tiếp bên dưới.</p>
+            <button class="btn" id="auth-action-btn" onclick="processAuthentication()" style="width: 100%; margin-top: 10px;">Đăng Nhập</button>
+            
+            <div class="auth-switch">
+                <span id="switch-mode-text" onclick="switchAuthMode()">Học sinh chưa có tài khoản? Đăng ký ngay</span>
+            </div>
         </div>
 
-        <!-- 2. MÀN HÌNH CHÍNH (DANH SÁCH ĐỀ THI & KHUNG RA ĐỀ CỦA TRÍ) -->
+        <!-- 2. MÀN HÌNH CHÍNH -->
         <div id="main-app" style="display: none;">
             
-            <!-- BẢNG QUẢN TRỊ DÀNH RIÊNG CHO TRÍ -->
-            <div id="teacher-dashboard" class="card" style="border-left: 6px solid var(--primary);">
+            <!-- BẢNG QUẢN TRỊ DÀNH RIÊNG CHO THẦY TRÍ -->
+            <div id="teacher-dashboard" class="card" style="display: none; border-left: 6px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="color: var(--primary);">🛠️ Chào Thầy Trí - Bảng Quản Trị Đề Thi</h3>
                     <button class="btn" onclick="toggleCreateExamBox()">+ Soạn Đề Thi Mới</button>
@@ -282,7 +298,7 @@
                 </div>
             </div>
 
-            <!-- DANH SÁCH ĐỀ THI CHO HỌC SINH LÀM -->
+            <!-- DANH SÁCH ĐỀ THI CHO TẤT CẢ MỌI NGƯỜI LÀM -->
             <div class="card">
                 <h2>Danh Sách Đề Thi Khả Dụng</h2>
                 <div id="exam-list-container" style="margin-top: 20px;"></div>
@@ -310,8 +326,11 @@
     </div>
 
     <script>
-        // Lưu trữ danh sách đề thi bằng phiên bản v6
-        let systemExams = JSON.parse(localStorage.getItem('app_exams_v6')) || [
+        // Danh sách tài khoản học sinh đăng ký (lưu tự do)
+        let studentUsers = JSON.parse(localStorage.getItem('student_users_v7')) || [];
+        
+        // Danh sách đề thi
+        let systemExams = JSON.parse(localStorage.getItem('app_exams_v7')) || [
             {
                 id: 1,
                 title: "Đề Thi Khởi Động Hóa Học (Mẫu)",
@@ -323,7 +342,8 @@
             }
         ];
 
-        let isTeacherLoggedIn = JSON.parse(localStorage.getItem('teacher_logged_v6')) || false;
+        let activeUser = JSON.parse(localStorage.getItem('active_user_v7')) || null;
+        let isRegisterMode = false;
         let currentSelectedExam = null;
         let studentChoices = {};
         let countdownTimer = null;
@@ -338,60 +358,86 @@
             document.getElementById('error-alert').style.display = 'none';
         }
 
-        // Xử lý đăng nhập dành riêng cho Thầy Trí
-        function processTeacherLogin() {
+        // Chuyển đổi giữa chế độ Đăng nhập và Đăng ký học sinh
+        function switchAuthMode() {
+            isRegisterMode = !isRegisterMode;
             hideErrorAlert();
-            let userField = document.getElementById('auth-username').value.trim();
-            let passField = document.getElementById('auth-password').value.trim();
+            document.getElementById('auth-title').textContent = isRegisterMode ? "Đăng Ký Tài Khoản Học Sinh" : "Đăng Nhập Hệ Thống";
+            document.getElementById('auth-action-btn').textContent = isRegisterMode ? "Đăng Ký Ngay" : "Đăng Nhập";
+            document.getElementById('switch-mode-text').textContent = isRegisterMode ? "Đã có tài khoản? Đăng nhập tại đây" : "Học sinh chưa có tài khoản? Đăng ký ngay";
+        }
 
-            if (!userField || !passField) {
+        function processAuthentication() {
+            hideErrorAlert();
+            let uField = document.getElementById('auth-username').value.trim();
+            let pField = document.getElementById('auth-password').value.trim();
+
+            if (!uField || !pField) {
                 displayErrorAlert("⚠️ Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
                 return;
             }
 
-            if (userField !== "Trí") {
-                displayErrorAlert("❌ Tên đăng nhập không chính xác (Hệ thống chỉ cho phép Giáo viên Trí quản trị)!");
-                return;
-            }
+            if (isRegisterMode) {
+                // Kiểm tra trùng tên với Thầy Trí hoặc học sinh khác
+                if (uField === "Trí") {
+                    displayErrorAlert("⚠️ Tên đăng nhập này là của giáo viên, vui lòng chọn tên khác!");
+                    return;
+                }
+                if (studentUsers.some(s => s.username === uField)) {
+                    displayErrorAlert("⚠️ Tên đăng nhập này đã tồn tại, vui lòng chọn tên khác!");
+                    return;
+                }
 
-            if (passField !== "08082009") {
-                displayErrorAlert("❌ Mật khẩu không chính xác!");
-                return;
-            }
+                studentUsers.push({ username: uField, pass: pField });
+                localStorage.setItem('student_users_v7', JSON.stringify(studentUsers));
+                alert("Đăng ký tài khoản học sinh thành công! Hãy đăng nhập.");
+                switchAuthMode();
+            } else {
+                // Kiểm tra xem có phải Thầy Trí không
+                if (uField === "Trí") {
+                    if (pField !== "08082009") {
+                        displayErrorAlert("❌ Mật khẩu Giáo viên không chính xác!");
+                        return;
+                    }
+                    activeUser = { username: "Trí", role: "teacher" };
+                } else {
+                    // Kiểm tra tài khoản học sinh
+                    let foundStudent = studentUsers.find(s => s.username === uField);
+                    if (!foundStudent) {
+                        displayErrorAlert("❌ Tên đăng nhập không tồn tại trong hệ thống!");
+                        return;
+                    }
+                    if (foundStudent.pass !== pField) {
+                        displayErrorAlert("❌ Mật khẩu học sinh không chính xác!");
+                        return;
+                    }
+                    activeUser = { username: foundStudent.username, role: "student" };
+                }
 
-            isTeacherLoggedIn = true;
-            localStorage.setItem('teacher_logged_v6', 'true');
-            initializeDashboard();
+                localStorage.setItem('active_user_v7', JSON.stringify(activeUser));
+                initializeDashboard();
+            }
         }
 
         function logoutSystem() {
-            localStorage.removeItem('teacher_logged_v6');
+            localStorage.removeItem('active_user_v7');
             location.reload();
         }
 
         function initializeDashboard() {
-            // Ẩn khung đăng nhập, hiện bảng chính (Mọi người đều thấy danh sách đề để làm, riêng Thầy Trí có thêm bảng điều khiển ra đề)
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
+            if (activeUser) {
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                document.getElementById('user-info-bar').style.display = 'block';
+                document.getElementById('current-user-badge').textContent = `${activeUser.username} (${activeUser.role === 'teacher' ? 'Giáo Viên' : 'Học Sinh'})`;
 
-            if (isTeacherLoggedIn) {
-                document.getElementById('user-info-bar').style.display = 'block';
-                document.getElementById('current-user-badge').textContent = "Trí (Giáo Viên)";
-                document.getElementById('teacher-dashboard').style.display = 'block';
-            } else {
-                document.getElementById('teacher-dashboard').style.display = 'none';
-                // Thêm nút nhỏ ở góc để Thầy Trí có thể đăng nhập lại khi cần
-                document.getElementById('user-info-bar').style.display = 'block';
-                document.getElementById('current-user-badge').innerHTML = `<span style="cursor:pointer; color:var(--primary);" onclick="showLoginAgain()">🔑 Giáo Viên Đăng Nhập</span>`;
+                if (activeUser.role === 'teacher') {
+                    document.getElementById('teacher-dashboard').style.display = 'block';
+                } else {
+                    document.getElementById('teacher-dashboard').style.display = 'none';
+                }
+                renderExamListUI();
             }
-
-            renderExamListUI();
-        }
-
-        function showLoginAgain() {
-            document.getElementById('auth-container').style.display = 'block';
-            document.getElementById('main-app').style.display = 'none';
-            document.getElementById('user-info-bar').style.display = 'none';
         }
 
         function renderExamListUI() {
@@ -497,81 +543,4 @@
                 questions: extractedQuestions
             });
 
-            localStorage.setItem('app_exams_v6', JSON.stringify(systemExams));
-            alert("Đã lưu đề thi mới lên hệ thống thành công!");
-            location.reload();
-        }
-
-        function startDoingExam(index) {
-            currentSelectedExam = systemExams[index];
-            studentChoices = {};
-            
-            document.getElementById('main-app').style.display = 'none';
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('quiz-screen').style.display = 'block';
-            document.getElementById('active-exam-title').textContent = currentSelectedExam.title;
-
-            let htmlContent = '';
-            currentSelectedExam.questions.forEach((q, qIdx) => {
-                htmlContent += `
-                    <div class="question-card">
-                        <div class="question-title">Câu ${qIdx + 1}: ${q.question}</div>
-                        <div class="options">
-                            ${q.options.map((optText, optIdx) => `
-                                <label class="option-label">
-                                    <input type="radio" name="exam_q_${qIdx}" value="${optIdx}" onclick="studentChoices[${qIdx}] = ${optIdx}">
-                                    ${optText}
-                                </label>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('questions-render-box').innerHTML = htmlContent;
-
-            let remainingSeconds = currentSelectedExam.time * 60;
-            countdownTimer = setInterval(() => {
-                let m = Math.floor(remainingSeconds / 60);
-                let s = remainingSeconds % 60;
-                document.getElementById('time-left-clock').textContent = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
-
-                if (--remainingSeconds < 0) {
-                    clearInterval(countdownTimer);
-                    alert("Thời gian làm bài đã hết!");
-                    submitExamPaper();
-                }
-            }, 1000);
-        }
-
-        function submitExamPaper() {
-            clearInterval(countdownTimer);
-            let earnedScore = 0;
-            let reviewHtml = '<h3 style="margin-bottom: 14px;">Chi tiết đáp án:</h3>';
-
-            currentSelectedExam.questions.forEach((q, qIdx) => {
-                let chosenOpt = studentChoices[qIdx];
-                let isRight = chosenOpt === q.correct;
-                if (isRight) earnedScore++;
-
-                reviewHtml += `
-                    <div style="padding: 14px; margin-bottom: 12px; border-radius: 10px; background: ${isRight ? '#dcfce7' : '#fee2e2'}; border: 1px solid ${isRight ? '#bbf7d0' : '#fecaca'};">
-                        <div style="font-weight: 600;">Câu ${qIdx + 1}: ${q.question}</div>
-                        <div style="font-size: 0.9rem; margin-top: 6px;">Bạn chọn: <b>${chosenOpt !== undefined ? q.options[chosenOpt] : 'Chưa chọn'}</b></div>
-                        <div style="font-size: 0.9rem;">Đáp án chuẩn: <b>${q.options[q.correct]}</b></div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('quiz-screen').style.display = 'none';
-            document.getElementById('result-screen').style.display = 'block';
-            document.getElementById('final-score-text').textContent = `${earnedScore} / ${currentSelectedExam.questions.length}`;
-            document.getElementById('detailed-review-box').innerHTML = reviewHtml;
-        }
-
-        // Tự động kiểm tra nếu đã đăng nhập trước đó
-        if (isTeacherLoggedIn) {
-            initializeDashboard();
-        }
-    </script>
-</body>
-</html>
+            localStorage.setItem('app_exams_v7', JSON.stringify(systemExams));
