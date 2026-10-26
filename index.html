@@ -15,6 +15,7 @@
             --border: #e2e8f0;
             --success: #22c55e;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         * {
@@ -103,6 +104,24 @@
         .btn-outline:hover {
             background: #eef2ff;
         }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+            width: auto;
+            padding: 8px 14px;
+            font-size: 0.9rem;
+        }
+        .btn-warning:hover { background: #d97706; }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            width: auto;
+            padding: 8px 14px;
+            font-size: 0.9rem;
+        }
+        .btn-danger:hover { background: #dc2626; }
 
         .btn-link {
             background: none;
@@ -220,12 +239,12 @@
         <div id="dashboard-section" style="display: none;">
             <div id="teacher-panel" class="card" style="display: none; border-left: 6px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: var(--primary);">🛠️ Chào Thầy Trí - Kho Đề & Trộn Ngẫu Nhiên</h3>
-                    <button type="button" class="btn btn-outline" onclick="toggleExamBuilder()" style="width: auto;">+ Soạn Kho Đề Mới</button>
+                    <h3 style="color: var(--primary);">🛠️ Chào Thầy Trí - Kho Đề & Quản Trị</h3>
+                    <button type="button" class="btn btn-outline" onclick="openNewExamBuilder()" style="width: auto;">+ Soạn Kho Đề Mới</button>
                 </div>
 
                 <div id="builder-form" style="display: none; margin-top: 24px; background: #f1f5f9; padding: 20px; border-radius: 12px;">
-                    <h3 style="margin-bottom: 16px; color: var(--primary);">Tạo Kho Câu Hỏi Trắc Nghiệm</h3>
+                    <h3 id="builder-form-title" style="margin-bottom: 16px; color: var(--primary);">Tạo Kho Câu Hỏi Trắc Nghiệm</h3>
                     
                     <div class="form-group">
                         <label>Tên bộ đề / Chủ đề:</label>
@@ -239,7 +258,7 @@
 
                     <div class="form-group">
                         <label>Số lượng câu hỏi ngẫu nhiên lấy ra cho học sinh làm:</label>
-                        <input type="number" id="exam-random-count" placeholder="VD: 5 (Để trống sẽ lấy hết kho)">
+                        <input type="number" id="exam-random-count" placeholder="VD: 5 (Để trống hoặc điền số nhỏ hơn tổng số câu)">
                     </div>
                     
                     <h4 style="margin: 18px 0 10px 0;">Nhập Toàn Bộ Câu Hỏi Vào Kho:</h4>
@@ -248,7 +267,7 @@
                     <button type="button" class="btn btn-outline" onclick="addNewQuestionField()" style="width: 100%; margin-bottom: 16px;">+ Thêm Câu Hỏi Vào Kho</button>
                     
                     <div style="display: flex; gap: 12px;">
-                        <button type="button" class="btn" onclick="saveNewExamToSystem()">Lưu Kho Đề Lên Hệ Thống</button>
+                        <button type="button" class="btn" onclick="saveExamDataToSystem()">Lưu Đề Lên Hệ Thống</button>
                         <button type="button" class="btn btn-outline" onclick="toggleExamBuilder()">Hủy Bỏ</button>
                     </div>
                 </div>
@@ -281,9 +300,9 @@
     </div>
 
     <script>
-        let studentDatabase = JSON.parse(localStorage.getItem('db_students_v15')) || [];
+        let studentDatabase = JSON.parse(localStorage.getItem('db_students_v16')) || [];
         
-        let examDatabase = JSON.parse(localStorage.getItem('db_exams_v15')) || [
+        let examDatabase = JSON.parse(localStorage.getItem('db_exams_v16')) || [
             {
                 id: 1, 
                 title: "Kho Đề Hóa Học Tổng Hợp (Mẫu ngẫu nhiên)", 
@@ -297,11 +316,12 @@
             }
         ];
 
-        let activeUserSession = JSON.parse(localStorage.getItem('db_session_v15')) || null;
+        let activeUserSession = JSON.parse(localStorage.getItem('db_session_v16')) || null;
         let workingExam = null;
         let activeQuestionsSet = [];
         let studentAnswersMap = {};
         let liveTimerInterval = null;
+        let editingExamId = null; // Biến lưu ID đề đang được chỉnh sửa
 
         function switchView(target) {
             document.getElementById('login-alert').style.display = 'none';
@@ -326,7 +346,7 @@
             if (studentDatabase.some(s => s.username === u)) { alertBox.textContent = "⚠️ Tên đăng nhập đã tồn tại!"; alertBox.style.display = 'block'; return; }
 
             studentDatabase.push({ username: u, pass: p });
-            localStorage.setItem('db_students_v15', JSON.stringify(studentDatabase));
+            localStorage.setItem('db_students_v16', JSON.stringify(studentDatabase));
             alert("Đăng ký thành công!");
             switchView('login');
         }
@@ -348,12 +368,12 @@
                 activeUserSession = { username: found.username, role: "student" };
             }
 
-            localStorage.setItem('db_session_v15', JSON.stringify(activeUserSession));
+            localStorage.setItem('db_session_v16', JSON.stringify(activeUserSession));
             loadDashboard();
         }
 
         function systemLogout() {
-            localStorage.removeItem('db_session_v15');
+            localStorage.removeItem('db_session_v16');
             location.reload();
         }
 
@@ -383,13 +403,27 @@
             examDatabase.forEach((ex, idx) => {
                 let totalInBank = ex.questions.length;
                 let pickCount = ex.randomCount || totalInBank;
+                
+                let teacherActions = '';
+                if (activeUserSession && activeUserSession.role === 'teacher') {
+                    teacherActions = `
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-warning" onclick="openEditExam(${ex.id})">Sửa</button>
+                            <button type="button" class="btn btn-danger" onclick="deleteExam(${ex.id})">Xóa</button>
+                            <button type="button" class="btn" style="width: auto;" onclick="startDoingExam(${idx})">Vào Làm</button>
+                        </div>
+                    `;
+                } else {
+                    teacherActions = `<button type="button" class="btn" style="width: auto;" onclick="startDoingExam(${idx})">Vào Làm Bài</button>`;
+                }
+
                 listContainer.innerHTML += `
                     <div class="exam-item">
                         <div>
                             <h3 style="margin-bottom: 4px;">${ex.title}</h3>
                             <p style="font-size: 0.9rem; color: var(--text-muted);">⏱️ Thời gian: ${ex.time} phút | 📚 Kho: ${totalInBank} câu (Làm ${pickCount} câu ngẫu nhiên)</p>
                         </div>
-                        <button type="button" class="btn" style="width: auto;" onclick="startDoingExam(${idx})">Vào Làm Bài</button>
+                        ${teacherActions}
                     </div>
                 `;
             });
@@ -398,13 +432,46 @@
         function toggleExamBuilder() {
             let builderBox = document.getElementById('builder-form');
             builderBox.style.display = builderBox.style.display === 'none' ? 'block' : 'none';
-            if (builderBox.style.display === 'block' && document.getElementById('questions-builder-container').children.length === 0) {
-                addNewQuestionField();
-            }
+        }
+
+        // Mở form tạo đề mới hoàn toàn
+        function openNewExamBuilder() {
+            editingExamId = null;
+            document.getElementById('builder-form-title').textContent = "Tạo Kho Câu Hỏi Trắc Nghiệm Mới";
+            document.getElementById('exam-title-input').value = '';
+            document.getElementById('exam-time-input').value = '15';
+            document.getElementById('exam-random-count').value = '';
+            document.getElementById('questions-builder-container').innerHTML = '';
+            addNewQuestionField();
+            document.getElementById('builder-form').style.display = 'block';
+        }
+
+        // Mở form chỉnh sửa đề cũ
+        function openEditExam(examId) {
+            let exam = examDatabase.find(e => e.id === examId);
+            if (!exam) return;
+
+            editingExamId = exam.id;
+            document.getElementById('builder-form-title').textContent = `Chỉnh Sửa Đề: ${exam.title}`;
+            document.getElementById('exam-title-input').value = exam.title;
+            document.getElementById('exam-time-input').value = exam.time;
+            document.getElementById('exam-random-count').value = exam.randomCount || '';
+
+            let container = document.getElementById('questions-builder-container');
+            container.innerHTML = '';
+            questionCounter = 0;
+
+            // Nạp lại toàn bộ câu hỏi cũ vào form sửa
+            exam.questions.forEach(q => {
+                addNewQuestionField(q);
+            });
+
+            document.getElementById('builder-form').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         let questionCounter = 0;
-        function addNewQuestionField() {
+        function addNewQuestionField(qData = null) {
             questionCounter++;
             let container = document.getElementById('questions-builder-container');
             let itemDiv = document.createElement('div');
@@ -412,30 +479,34 @@
             itemDiv.style.cssText = "background:#fff; padding:16px; border-radius:10px; margin-bottom:14px; border:1px solid var(--border);";
             
             itemDiv.innerHTML = `
-                <div class="form-group">
-                    <label>Câu hỏi ${questionCounter}:</label>
-                    <input type="text" class="b-q-text" placeholder="Nhập nội dung câu hỏi...">
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="margin-bottom:0;">Câu hỏi:</label>
+                    <button type="button" class="btn btn-danger" style="padding: 2px 8px; font-size: 0.8rem;" onclick="this.closest('.q-builder-item').remove()">Xóa Câu Này</button>
+                </div>
+                <div class="form-group" style="margin-top:8px;">
+                    <input type="text" class="b-q-text" placeholder="Nhập nội dung câu hỏi..." value="${qData ? qData.question : ''}">
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="text" class="b-opt-0" placeholder="Đáp án A">
-                    <input type="text" class="b-opt-1" placeholder="Đáp án B">
-                    <input type="text" class="b-opt-2" placeholder="Đáp án C">
-                    <input type="text" class="b-opt-3" placeholder="Đáp án D">
+                    <input type="text" class="b-opt-0" placeholder="Đáp án A" value="${qData ? qData.options[0] : ''}">
+                    <input type="text" class="b-opt-1" placeholder="Đáp án B" value="${qData ? qData.options[1] : ''}">
+                    <input type="text" class="b-opt-2" placeholder="Đáp án C" value="${qData ? qData.options[2] : ''}">
+                    <input type="text" class="b-opt-3" placeholder="Đáp án D" value="${qData ? qData.options[3] : ''}">
                 </div>
                 <div class="form-group" style="margin-top:12px;">
                     <label>Đáp án đúng:</label>
                     <select class="b-correct-select">
-                        <option value="0">Đáp án A</option>
-                        <option value="1">Đáp án B</option>
-                        <option value="2">Đáp án C</option>
-                        <option value="3">Đáp án D</option>
+                        <option value="0" ${qData && qData.correct === 0 ? 'selected' : ''}>Đáp án A</option>
+                        <option value="1" ${qData && qData.correct === 1 ? 'selected' : ''}>Đáp án B</option>
+                        <option value="2" ${qData && qData.correct === 2 ? 'selected' : ''}>Đáp án C</option>
+                        <option value="3" ${qData && qData.correct === 3 ? 'selected' : ''}>Đáp án D</option>
                     </select>
                 </div>
             `;
             container.appendChild(itemDiv);
         }
 
-        function saveNewExamToSystem() {
+        // Lưu hoặc Cập nhật đề thi
+        function saveExamDataToSystem() {
             let titleVal = document.getElementById('exam-title-input').value.trim();
             let timeVal = parseInt(document.getElementById('exam-time-input').value) || 15;
             let randomCountVal = parseInt(document.getElementById('exam-random-count').value) || 0;
@@ -462,7 +533,7 @@
                 }
             });
 
-            if (parsedQuestions.length === 0) { alert("Nhập ít nhất 1 câu hỏi!"); return; }
+            if (parsedQuestions.length === 0) { alert("Nhập ít nhất 1 câu hỏi hoàn chỉnh!"); return; }
             if (randomCountVal > parsedQuestions.length) {
                 alert("Số câu lấy ngẫu nhiên không được lớn hơn tổng số câu trong kho!");
                 return;
@@ -470,17 +541,40 @@
 
             let finalRandom = (randomCountVal > 0) ? randomCountVal : parsedQuestions.length;
 
-            examDatabase.push({
-                id: Date.now(),
-                title: titleVal,
-                time: timeVal,
-                randomCount: finalRandom,
-                questions: parsedQuestions
-            });
+            if (editingExamId) {
+                // Cập nhật đề cũ
+                let examIndex = examDatabase.findIndex(e => e.id === editingExamId);
+                if (examIndex !== -1) {
+                    examDatabase[examIndex].title = titleVal;
+                    examDatabase[examIndex].time = timeVal;
+                    examDatabase[examIndex].randomCount = finalRandom;
+                    examDatabase[examIndex].questions = parsedQuestions;
+                }
+                alert("Cập nhật đề thi thành công!");
+            } else {
+                // Thêm đề mới
+                examDatabase.push({
+                    id: Date.now(),
+                    title: titleVal,
+                    time: timeVal,
+                    randomCount: finalRandom,
+                    questions: parsedQuestions
+                });
+                alert("Lưu kho đề mới thành công!");
+            }
 
-            localStorage.setItem('db_exams_v15', JSON.stringify(examDatabase));
-            alert("Lưu kho đề thành công!");
+            localStorage.setItem('db_exams_v16', JSON.stringify(examDatabase));
             location.reload();
+        }
+
+        // Xóa đề thi
+        function deleteExam(examId) {
+            if (confirm("Bạn có chắc chắn muốn xóa đề thi này không?")) {
+                examDatabase = examDatabase.filter(e => e.id !== examId);
+                localStorage.setItem('db_exams_v16', JSON.stringify(examDatabase));
+                alert("Đã xóa đề thi thành công!");
+                renderExamsList();
+            }
         }
 
         function getRandomQuestions(arr, n) {
@@ -503,7 +597,7 @@
             activeQuestionsSet.forEach((q, qIdx) => {
                 renderHtml += `
                     <div style="margin-bottom: 28px;">
-                        <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 12px;">Câu ${qIdx + 1}: ${q.question}</div>
+                        <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 12px;">Câu ${qIdx + 1}:${q.question}</div>
                         <div style="display: grid; gap: 10px;">
                             ${q.options.map((optText, optIdx) => `
                                 <label style="padding: 12px 16px; background: #fafaf9; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; display: flex; align-items: center; font-size: 0.95rem;">
@@ -543,22 +637,5 @@
 
                 reviewReportHtml += `
                     <div style="padding: 16px; margin-bottom: 12px; border-radius: 10px; background: ${isAnswerCorrect ? '#dcfce7' : '#fee2e2'}; border: 1px solid ${isAnswerCorrect ? '#bbf7d0' : '#fecaca'};">
-                        <div style="font-weight: 600; margin-bottom: 6px;">Câu ${qIdx + 1}: ${q.question}</div>
-                        <div style="font-size: 0.95rem;">Bạn chọn: <b>${chosenOption !== undefined ? q.options[chosenOption] : 'Chưa chọn'}</b></div>
-                        <div style="font-size: 0.95rem;">Đáp án đúng: <b>${q.options[q.correct]}</b></div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('quiz-taking-section').style.display = 'none';
-            document.getElementById('result-score-section').style.display = 'block';
-            document.getElementById('final-score-number').textContent = `${totalScoreEarned} / ${activeQuestionsSet.length}`;
-            document.getElementById('detailed-answers-review').innerHTML = reviewReportHtml;
-        }
-
-        if (activeUserSession) {
-            loadDashboard();
-        }
-    </script>
-</body>
-</html>
+                        <div style="font-weight: 600; margin-bottom: 6px;">Câu ${qIdx + 1}:${q.question}</div>
+                        <div style="font-size: 0.95rem;">Bạn chọn
