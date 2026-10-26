@@ -117,7 +117,7 @@
             font-size: 0.95rem;
         }
 
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 10px 14px;
             border: 1px solid var(--border);
@@ -126,7 +126,7 @@
             outline: none;
         }
 
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus {
             border-color: var(--primary);
         }
 
@@ -143,19 +143,6 @@
 
         .exam-item:hover {
             border-color: var(--primary);
-        }
-
-        .auth-switch {
-            text-align: center;
-            margin-top: 18px;
-            font-size: 0.95rem;
-            color: var(--text-muted);
-        }
-
-        .auth-switch span {
-            color: var(--primary);
-            cursor: pointer;
-            font-weight: 600;
         }
 
         .error-msg {
@@ -240,9 +227,9 @@
             </div>
         </header>
 
-        <!-- KHUNG ĐĂNG NHẬP / ĐĂNG KÝ -->
-        <div id="auth-container" class="card" style="max-width: 420px; margin: 0 auto;">
-            <h2 id="auth-title" style="text-align: center; margin-bottom: 20px;">Đăng Nhập Hệ Thống</h2>
+        <!-- 1. MÀN HÌNH ĐĂNG NHẬP GIÁO VIÊN -->
+        <div id="auth-container" class="card" style="max-width: 400px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 20px;">Đăng Nhập Giáo Viên</h2>
             
             <div id="error-alert" class="error-msg"></div>
 
@@ -255,34 +242,23 @@
                 <label>Mật khẩu:</label>
                 <input type="password" id="auth-password" placeholder="Nhập mật khẩu...">
             </div>
-            
-            <div class="form-group" id="role-group" style="display: none;">
-                <label>Chọn vai trò:</label>
-                <select id="auth-role">
-                    <option value="student">Học Sinh (Làm bài thi)</option>
-                    <option value="teacher">Giáo Viên (Tạo đề & Quản lý)</option>
-                </select>
-            </div>
 
-            <button class="btn" id="auth-action-btn" onclick="processAuthentication()" style="width: 100%; margin-top: 10px;">Đăng Nhập</button>
-            
-            <div class="auth-switch">
-                <span id="switch-mode-text" onclick="switchAuthMode()">Chưa có tài khoản? Đăng ký ngay</span>
-            </div>
+            <button class="btn" onclick="processTeacherLogin()" style="width: 100%; margin-top: 10px;">Đăng Nhập Quản Trị</button>
+            <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Dành riêng cho giáo viên ra đề. Học sinh vào làm bài trực tiếp bên dưới.</p>
         </div>
 
-        <!-- MÀN HÌNH CHÍNH (SAU KHI ĐĂNG NHẬP) -->
+        <!-- 2. MÀN HÌNH CHÍNH (DANH SÁCH ĐỀ THI & KHUNG RA ĐỀ CỦA TRÍ) -->
         <div id="main-app" style="display: none;">
             
-            <!-- BẢNG ĐIỀU KHIỂN DÀNH CHO GIÁO VIÊN (TRÍ) -->
-            <div id="teacher-dashboard" class="card" style="display: none; border-left: 6px solid var(--primary);">
+            <!-- BẢNG QUẢN TRỊ DÀNH RIÊNG CHO TRÍ -->
+            <div id="teacher-dashboard" class="card" style="border-left: 6px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: var(--primary);">🛠️ Bảng Quản Trị Giáo Viên</h3>
-                    <button class="btn" onclick="toggleCreateExamBox()">+ Tạo Đề Thi Mới</button>
+                    <h3 style="color: var(--primary);">🛠️ Chào Thầy Trí - Bảng Quản Trị Đề Thi</h3>
+                    <button class="btn" onclick="toggleCreateExamBox()">+ Soạn Đề Thi Mới</button>
                 </div>
 
                 <div id="create-exam-panel" style="display: none; margin-top: 24px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px dashed var(--primary);">
-                    <h3 style="margin-bottom: 16px; color: var(--primary);">Soạn Đề Thi Trắc Nghiệm</h3>
+                    <h3 style="margin-bottom: 16px; color: var(--primary);">Tạo Bộ Đề Mới</h3>
                     
                     <div class="form-group">
                         <label>Tên đề thi:</label>
@@ -300,20 +276,20 @@
                     <button class="btn btn-outline" onclick="appendQuestionInput()" style="width: 100%; margin-bottom: 16px;">+ Thêm Câu Hỏi Khác</button>
                     
                     <div style="display: flex; gap: 12px;">
-                        <button class="btn" onclick="commitNewExamData()">Lưu Đề Thi Vào Hệ Thống</button>
+                        <button class="btn" onclick="commitNewExamData()">Lưu Đề Lên Hệ Thống</button>
                         <button class="btn btn-outline" onclick="toggleCreateExamBox()">Hủy Bỏ</button>
                     </div>
                 </div>
             </div>
 
-            <!-- DANH SÁCH ĐỀ THI CHUNG -->
+            <!-- DANH SÁCH ĐỀ THI CHO HỌC SINH LÀM -->
             <div class="card">
                 <h2>Danh Sách Đề Thi Khả Dụng</h2>
                 <div id="exam-list-container" style="margin-top: 20px;"></div>
             </div>
         </div>
 
-        <!-- MÀN HÌNH LÀM BÀI THI -->
+        <!-- 3. MÀN HÌNH LÀM BÀI THI -->
         <div id="quiz-screen" class="card" style="display: none;">
             <div class="quiz-header">
                 <h2 id="active-exam-title">Tên Đề Thi</h2>
@@ -323,7 +299,7 @@
             <button class="btn" onclick="submitExamPaper()" style="width: 100%; margin-top: 20px;">Nộp Bài Thi</button>
         </div>
 
-        <!-- MÀN HÌNH KẾT QUẢ -->
+        <!-- 4. MÀN HÌNH KẾT QUẢ -->
         <div id="result-screen" class="card" style="display: none; text-align: center;">
             <h2>Kết Quả Bài Làm</h2>
             <div style="font-size: 3rem; font-weight: 800; color: var(--primary); margin: 16px 0;" id="final-score-text">0/0</div>
@@ -334,13 +310,8 @@
     </div>
 
     <script>
-        // Cơ sở dữ liệu lưu trên localStorage (Sử dụng version _v5 để tránh xung đột sạch 100%)
-        let systemUsers = JSON.parse(localStorage.getItem('app_users_v5')) || [
-            { username: "Trí", pass: "08082009", role: "teacher" },
-            { username: "hocsinh", pass: "123", role: "student" }
-        ];
-
-        let systemExams = JSON.parse(localStorage.getItem('app_exams_v5')) || [
+        // Lưu trữ danh sách đề thi bằng phiên bản v6
+        let systemExams = JSON.parse(localStorage.getItem('app_exams_v6')) || [
             {
                 id: 1,
                 title: "Đề Thi Khởi Động Hóa Học (Mẫu)",
@@ -352,8 +323,7 @@
             }
         ];
 
-        let activeUser = JSON.parse(localStorage.getItem('active_user_v5')) || null;
-        let isRegisterState = false;
+        let isTeacherLoggedIn = JSON.parse(localStorage.getItem('teacher_logged_v6')) || false;
         let currentSelectedExam = null;
         let studentChoices = {};
         let countdownTimer = null;
@@ -368,76 +338,60 @@
             document.getElementById('error-alert').style.display = 'none';
         }
 
-        // Chuyển đổi qua lại giữa Đăng nhập và Đăng ký
-        function switchAuthMode() {
-            isRegisterState = !isRegisterState;
-            hideErrorAlert();
-            document.getElementById('auth-title').textContent = isRegisterState ? "Đăng Ký Tài Khoản Mới" : "Đăng Nhập Hệ Thống";
-            document.getElementById('auth-action-btn').textContent = isRegisterState ? "Đăng Ký Ngay" : "Đăng Nhập";
-            document.getElementById('role-group').style.display = isRegisterState ? "block" : "none";
-            document.getElementById('switch-mode-text').textContent = isRegisterState ? "Đã có tài khoản? Đăng nhập tại đây" : "Chưa có tài khoản? Đăng ký ngay";
-        }
-
-        // Xử lý logic Đăng nhập & Đăng ký kèm báo lỗi chi tiết
-        function processAuthentication() {
+        // Xử lý đăng nhập dành riêng cho Thầy Trí
+        function processTeacherLogin() {
             hideErrorAlert();
             let userField = document.getElementById('auth-username').value.trim();
             let passField = document.getElementById('auth-password').value.trim();
 
             if (!userField || !passField) {
-                displayErrorAlert("⚠️ Vui lòng điền đầy đủ tên đăng nhập và mật khẩu!");
+                displayErrorAlert("⚠️ Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
                 return;
             }
 
-            if (isRegisterState) {
-                let chosenRole = document.getElementById('auth-role').value;
-                let existingUser = systemUsers.find(u => u.username === userField);
-                
-                if (existingUser) {
-                    displayErrorAlert("⚠️ Tên đăng nhập này đã tồn tại trong hệ thống, vui lòng chọn tên khác!");
-                    return;
-                }
-
-                systemUsers.push({ username: userField, pass: passField, role: chosenRole });
-                localStorage.setItem('app_users_v5', JSON.stringify(systemUsers));
-                alert("Đăng ký tài khoản thành công! Hãy tiến hành đăng nhập.");
-                switchAuthMode();
-            } else {
-                let targetUser = systemUsers.find(u => u.username === userField);
-                
-                if (!targetUser) {
-                    displayErrorAlert("❌ Tên đăng nhập không tồn tại trong hệ thống!");
-                    return;
-                }
-
-                if (targetUser.pass !== passField) {
-                    displayErrorAlert("❌ Mật khẩu không chính xác, vui lòng kiểm tra lại!");
-                    return;
-                }
-
-                activeUser = targetUser;
-                localStorage.setItem('active_user_v5', JSON.stringify(activeUser));
-                initializeDashboard();
+            if (userField !== "Trí") {
+                displayErrorAlert("❌ Tên đăng nhập không chính xác (Hệ thống chỉ cho phép Giáo viên Trí quản trị)!");
+                return;
             }
+
+            if (passField !== "08082009") {
+                displayErrorAlert("❌ Mật khẩu không chính xác!");
+                return;
+            }
+
+            isTeacherLoggedIn = true;
+            localStorage.setItem('teacher_logged_v6', 'true');
+            initializeDashboard();
         }
 
         function logoutSystem() {
-            localStorage.removeItem('active_user_v5');
+            localStorage.removeItem('teacher_logged_v6');
             location.reload();
         }
 
         function initializeDashboard() {
-            if (activeUser) {
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                document.getElementById('user-info-bar').style.display = 'block';
-                document.getElementById('current-user-badge').textContent = `${activeUser.username} (${activeUser.role === 'teacher' ? 'Giáo Viên' : 'Học Sinh'})`;
+            // Ẩn khung đăng nhập, hiện bảng chính (Mọi người đều thấy danh sách đề để làm, riêng Thầy Trí có thêm bảng điều khiển ra đề)
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
 
-                if (activeUser.role === 'teacher') {
-                    document.getElementById('teacher-dashboard').style.display = 'block';
-                }
-                renderExamListUI();
+            if (isTeacherLoggedIn) {
+                document.getElementById('user-info-bar').style.display = 'block';
+                document.getElementById('current-user-badge').textContent = "Trí (Giáo Viên)";
+                document.getElementById('teacher-dashboard').style.display = 'block';
+            } else {
+                document.getElementById('teacher-dashboard').style.display = 'none';
+                // Thêm nút nhỏ ở góc để Thầy Trí có thể đăng nhập lại khi cần
+                document.getElementById('user-info-bar').style.display = 'block';
+                document.getElementById('current-user-badge').innerHTML = `<span style="cursor:pointer; color:var(--primary);" onclick="showLoginAgain()">🔑 Giáo Viên Đăng Nhập</span>`;
             }
+
+            renderExamListUI();
+        }
+
+        function showLoginAgain() {
+            document.getElementById('auth-container').style.display = 'block';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('user-info-bar').style.display = 'none';
         }
 
         function renderExamListUI() {
@@ -491,7 +445,7 @@
                 </div>
                 <div class="form-group" style="margin-top:10px;">
                     <label>Đáp án đúng:</label>
-                    <select class="input-correct-ans">
+                    <select class="input-correct-ans" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px;">
                         <option value="0">Đáp án A</option>
                         <option value="1">Đáp án B</option>
                         <option value="2">Đáp án C</option>
@@ -532,7 +486,7 @@
             });
 
             if (extractedQuestions.length === 0) {
-                alert("Vui lòng nhập ít nhất 1 câu hỏi hoàn chỉnh (có nội dung và ít nhất 2 đáp án A, B)!");
+                alert("Vui lòng nhập ít nhất 1 câu hỏi hoàn chỉnh!");
                 return;
             }
 
@@ -543,7 +497,7 @@
                 questions: extractedQuestions
             });
 
-            localStorage.setItem('app_exams_v5', JSON.stringify(systemExams));
+            localStorage.setItem('app_exams_v6', JSON.stringify(systemExams));
             alert("Đã lưu đề thi mới lên hệ thống thành công!");
             location.reload();
         }
@@ -553,6 +507,7 @@
             studentChoices = {};
             
             document.getElementById('main-app').style.display = 'none';
+            document.getElementById('auth-container').style.display = 'none';
             document.getElementById('quiz-screen').style.display = 'block';
             document.getElementById('active-exam-title').textContent = currentSelectedExam.title;
 
@@ -574,7 +529,6 @@
             });
             document.getElementById('questions-render-box').innerHTML = htmlContent;
 
-            // Kích hoạt đồng hồ đếm ngược
             let remainingSeconds = currentSelectedExam.time * 60;
             countdownTimer = setInterval(() => {
                 let m = Math.floor(remainingSeconds / 60);
@@ -614,8 +568,10 @@
             document.getElementById('detailed-review-box').innerHTML = reviewHtml;
         }
 
-        // Tự động khôi phục trạng thái khi tải trang
-        initializeDashboard();
+        // Tự động kiểm tra nếu đã đăng nhập trước đó
+        if (isTeacherLoggedIn) {
+            initializeDashboard();
+        }
     </script>
 </body>
 </html>
