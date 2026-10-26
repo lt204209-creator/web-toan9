@@ -173,7 +173,7 @@
     <div class="container">
         <header>
             <h1>Hệ Thống Luyện Thi Trắc Nghiệm</h1>
-            <p>Ôn tập kiến thức thông minh & chính xác</p>
+            <p>Ôn tập kiến thức thông minh & trắc nghiệm ngẫu nhiên</p>
             <div id="user-top-bar" style="display: none;">
                 <span class="user-badge" id="user-role-label"></span>
                 <button type="button" class="btn btn-outline" style="padding: 6px 14px; font-size: 0.85rem; margin-top: 6px;" onclick="systemLogout()">Đăng Xuất</button>
@@ -183,67 +183,53 @@
         <!-- KHUNG ĐĂNG NHẬP -->
         <div id="login-section" class="card" style="max-width: 420px; margin: 0 auto;">
             <h2 style="text-align: center; margin-bottom: 24px;">Đăng Nhập Hệ Thống</h2>
-            
             <div id="login-alert" class="alert-box"></div>
-
             <div class="form-group">
                 <label>Tên đăng nhập:</label>
-                <input type="text" id="login-username" placeholder="Nhập tài khoản của bạn...">
+                <input type="text" id="login-username" placeholder="Nhập tài khoản...">
             </div>
-            
             <div class="form-group">
                 <label>Mật khẩu:</label>
                 <input type="password" id="login-password" placeholder="Nhập mật khẩu...">
             </div>
-
             <button type="button" class="btn" onclick="executeLogin()">Đăng Nhập</button>
-            
             <div style="text-align: center; margin-top: 20px; font-size: 0.95rem; color: var(--text-muted);">
-                Học sinh chưa có tài khoản? 
-                <button type="button" class="btn-link" onclick="switchView('register')">Đăng ký ngay</button>
+                Học sinh chưa có tài khoản? <button type="button" class="btn-link" onclick="switchView('register')">Đăng ký ngay</button>
             </div>
         </div>
 
         <!-- KHUNG ĐĂNG KÝ HỌC SINH -->
         <div id="register-section" class="card" style="max-width: 420px; margin: 0 auto; display: none;">
             <h2 style="text-align: center; margin-bottom: 24px;">Đăng Ký Học Sinh</h2>
-            
             <div id="register-alert" class="alert-box"></div>
-
             <div class="form-group">
                 <label>Tên đăng nhập mới:</label>
                 <input type="text" id="reg-username" placeholder="Chọn tên đăng nhập...">
             </div>
-            
             <div class="form-group">
                 <label>Mật khẩu:</label>
-                <input type="password" id="reg-password" placeholder="Tạo mật khẩu bảo mật...">
+                <input type="password" id="reg-password" placeholder="Tạo mật khẩu...">
             </div>
-
             <button type="button" class="btn" onclick="executeRegister()">Đăng Ký Tài Khoản</button>
-            
             <div style="text-align: center; margin-top: 20px; font-size: 0.95rem; color: var(--text-muted);">
-                Đã có tài khoản? 
-                <button type="button" class="btn-link" onclick="switchView('login')">Đăng nhập ngay</button>
+                Đã có tài khoản? <button type="button" class="btn-link" onclick="switchView('login')">Đăng nhập ngay</button>
             </div>
         </div>
 
-        <!-- MÀN HÌNH CHÍNH (SAU KHI ĐĂNG NHẬP) -->
+        <!-- MÀN HÌNH CHÍNH -->
         <div id="dashboard-section" style="display: none;">
-            
-            <!-- KHUNG SOẠN ĐỀ DÀNH CHO GIÁO VIÊN (TRÍ) -->
             <div id="teacher-panel" class="card" style="display: none; border-left: 6px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: var(--primary);">🛠️ Chào Thầy Trí - Bảng Quản Trị Đề Thi</h3>
-                    <button type="button" class="btn btn-outline" onclick="toggleExamBuilder()" style="width: auto;">+ Soạn Đề Thi Mới</button>
+                    <h3 style="color: var(--primary);">🛠️ Chào Thầy Trí - Kho Đề & Trộn Ngẫu Nhiên</h3>
+                    <button type="button" class="btn btn-outline" onclick="toggleExamBuilder()" style="width: auto;">+ Soạn Kho Đề Mới</button>
                 </div>
 
                 <div id="builder-form" style="display: none; margin-top: 24px; background: #f1f5f9; padding: 20px; border-radius: 12px;">
-                    <h3 style="margin-bottom: 16px; color: var(--primary);">Tạo Bộ Đề Trắc Nghiệm Mới</h3>
+                    <h3 style="margin-bottom: 16px; color: var(--primary);">Tạo Kho Câu Hỏi Trắc Nghiệm</h3>
                     
                     <div class="form-group">
-                        <label>Tên đề thi:</label>
-                        <input type="text" id="exam-title-input" placeholder="VD: Đề Kiểm Tra 15 Phút Hóa Học">
+                        <label>Tên bộ đề / Chủ đề:</label>
+                        <input type="text" id="exam-title-input" placeholder="VD: Kho Đề Ôn Tập Hóa 12">
                     </div>
                     
                     <div class="form-group">
@@ -251,27 +237,25 @@
                         <input type="number" id="exam-time-input" value="15">
                     </div>
 
-                    <!-- THÊM Ô CÀI ĐẶT SỐ CÂU NGẪU NHIÊN -->
                     <div class="form-group">
-                        <label>Số lượng câu hỏi bốc ngẫu nhiên cho học sinh làm (Để trống hoặc điền số nhỏ hơn tổng số câu trong kho):</label>
-                        <input type="number" id="exam-random-count" placeholder="VD: Lấy ngẫu nhiên 5 câu">
+                        <label>Số lượng câu hỏi ngẫu nhiên lấy ra cho học sinh làm:</label>
+                        <input type="number" id="exam-random-count" placeholder="VD: 5 (Để trống sẽ lấy hết kho)">
                     </div>
                     
-                    <h4 style="margin: 18px 0 10px 0;">Danh Sách Câu Hỏi Trong Kho:</h4>
+                    <h4 style="margin: 18px 0 10px 0;">Nhập Toàn Bộ Câu Hỏi Vào Kho:</h4>
                     <div id="questions-builder-container"></div>
 
-                    <button type="button" class="btn btn-outline" onclick="addNewQuestionField()" style="width: 100%; margin-bottom: 16px;">+ Thêm Câu Hỏi Khác</button>
+                    <button type="button" class="btn btn-outline" onclick="addNewQuestionField()" style="width: 100%; margin-bottom: 16px;">+ Thêm Câu Hỏi Vào Kho</button>
                     
                     <div style="display: flex; gap: 12px;">
-                        <button type="button" class="btn" onclick="saveNewExamToSystem()">Lưu Đề Lên Hệ Thống</button>
+                        <button type="button" class="btn" onclick="saveNewExamToSystem()">Lưu Kho Đề Lên Hệ Thống</button>
                         <button type="button" class="btn btn-outline" onclick="toggleExamBuilder()">Hủy Bỏ</button>
                     </div>
                 </div>
             </div>
 
-            <!-- DANH SÁCH ĐỀ THI -->
             <div class="card">
-                <h2>Danh Sách Đề Thi Hiện Có</h2>
+                <h2>Danh Sách Đề Thi Khả Dụng</h2>
                 <div id="exam-list-render" style="margin-top: 20px;"></div>
             </div>
         </div>
@@ -297,15 +281,14 @@
     </div>
 
     <script>
-        // Cơ sở dữ liệu chuẩn v13 (Giữ nguyên v10 nhưng nâng cấp thêm logic ngẫu nhiên)
-        let studentDatabase = JSON.parse(localStorage.getItem('db_students_v13')) || [];
+        let studentDatabase = JSON.parse(localStorage.getItem('db_students_v15')) || [];
         
-        let examDatabase = JSON.parse(localStorage.getItem('db_exams_v13')) || [
+        let examDatabase = JSON.parse(localStorage.getItem('db_exams_v15')) || [
             {
                 id: 1, 
-                title: "Đề Thi Khởi Động Hóa Học Mẫu", 
+                title: "Kho Đề Hóa Học Tổng Hợp (Mẫu ngẫu nhiên)", 
                 time: 15,
-                randomCount: 2, // Mẫu ngẫu nhiên 2 câu
+                randomCount: 2,
                 questions: [
                     { question: "Công thức hóa học của nước là gì?", options: ["CO2", "H2O", "NaCl", "HCl"], correct: 1 },
                     { question: "Kim loại nào nhẹ nhất trong tất cả các kim loại?", options: ["Na", "Li", "K", "Al"], correct: 1 },
@@ -314,17 +297,15 @@
             }
         ];
 
-        let activeUserSession = JSON.parse(localStorage.getItem('db_session_v13')) || null;
+        let activeUserSession = JSON.parse(localStorage.getItem('db_session_v15')) || null;
         let workingExam = null;
-        let currentQuestionsList = []; // Danh sách câu hỏi thực tế học sinh làm sau khi bốc ngẫu nhiên
+        let activeQuestionsSet = [];
         let studentAnswersMap = {};
         let liveTimerInterval = null;
 
-        // Chuyển đổi giữa giao diện Đăng nhập và Đăng ký
         function switchView(target) {
             document.getElementById('login-alert').style.display = 'none';
             document.getElementById('register-alert').style.display = 'none';
-
             if (target === 'register') {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('register-section').style.display = 'block';
@@ -334,78 +315,45 @@
             }
         }
 
-        // Xử lý Đăng ký tài khoản học sinh
         function executeRegister() {
             let u = document.getElementById('reg-username').value.trim();
             let p = document.getElementById('reg-password').value.trim();
             let alertBox = document.getElementById('register-alert');
             alertBox.style.display = 'none';
 
-            if (!u || !p) {
-                alertBox.textContent = "⚠️ Vui lòng điền đầy đủ tên đăng nhập và mật khẩu!";
-                alertBox.style.display = 'block';
-                return;
-            }
-
-            if (u === "Trí") {
-                alertBox.textContent = "⚠️ Tên đăng nhập này là của giáo viên, vui lòng chọn tên khác!";
-                alertBox.style.display = 'block';
-                return;
-            }
-
-            if (studentDatabase.some(s => s.username === u)) {
-                alertBox.textContent = "⚠️ Tên đăng nhập này đã tồn tại, vui lòng chọn tên khác!";
-                alertBox.style.display = 'block';
-                return;
-            }
+            if (!u || !p) { alertBox.textContent = "⚠️ Vui lòng điền đầy đủ!"; alertBox.style.display = 'block'; return; }
+            if (u === "Trí") { alertBox.textContent = "⚠️ Tên này thuộc về giáo viên!"; alertBox.style.display = 'block'; return; }
+            if (studentDatabase.some(s => s.username === u)) { alertBox.textContent = "⚠️ Tên đăng nhập đã tồn tại!"; alertBox.style.display = 'block'; return; }
 
             studentDatabase.push({ username: u, pass: p });
-            localStorage.setItem('db_students_v13', JSON.stringify(studentDatabase));
-            alert("Đăng ký tài khoản học sinh thành công! Hãy tiến hành đăng nhập.");
+            localStorage.setItem('db_students_v15', JSON.stringify(studentDatabase));
+            alert("Đăng ký thành công!");
             switchView('login');
         }
 
-        // Xử lý Đăng nhập
         function executeLogin() {
             let u = document.getElementById('login-username').value.trim();
             let p = document.getElementById('login-password').value.trim();
             let alertBox = document.getElementById('login-alert');
             alertBox.style.display = 'none';
 
-            if (!u || !p) {
-                alertBox.textContent = "⚠️ Vui lòng điền đầy đủ tên đăng nhập và mật khẩu!";
-                alertBox.style.display = 'block';
-                return;
-            }
+            if (!u || !p) { alertBox.textContent = "⚠️ Vui lòng điền đầy đủ!"; alertBox.style.display = 'block'; return; }
 
             if (u === "Trí") {
-                if (p !== "08082009") {
-                    alertBox.textContent = "❌ Mật khẩu giáo viên không chính xác!";
-                    alertBox.style.display = 'block';
-                    return;
-                }
+                if (p !== "08082009") { alertBox.textContent = "❌ Mật khẩu giáo viên sai!"; alertBox.style.display = 'block'; return; }
                 activeUserSession = { username: "Trí", role: "teacher" };
             } else {
-                let foundStudent = studentDatabase.find(s => s.username === u);
-                if (!foundStudent) {
-                    alertBox.textContent = "❌ Tên đăng nhập không tồn tại trong hệ thống!";
-                    alertBox.style.display = 'block';
-                    return;
-                }
-                if (foundStudent.pass !== p) {
-                    alertBox.textContent = "❌ Mật khẩu học sinh không chính xác!";
-                    alertBox.style.display = 'block';
-                    return;
-                }
-                activeUserSession = { username: foundStudent.username, role: "student" };
+                let found = studentDatabase.find(s => s.username === u);
+                if (!found || found.pass !== p) { alertBox.textContent = "❌ Sai tài khoản hoặc mật khẩu!"; alertBox.style.display = 'block'; return; }
+                activeUserSession = { username: found.username, role: "student" };
             }
 
-            localStorage.setItem('db_session_v13', JSON.stringify(activeUserSession));
+            localStorage.setItem('db_session_v15', JSON.stringify(activeUserSession));
             loadDashboard();
         }
 
         function systemLogout() {
-            localStorage.removeItem('db_session_v13');
+            localStorage.removeItem('db_session_v15');
             location.reload();
         }
 
@@ -428,18 +376,18 @@
             listContainer.innerHTML = '';
             
             if (examDatabase.length === 0) {
-                listContainer.innerHTML = '<p style="color:var(--text-muted);">Chưa có đề thi nào trên hệ thống.</p>';
+                listContainer.innerHTML = '<p style="color:var(--text-muted);">Chưa có đề thi nào.</p>';
                 return;
             }
 
             examDatabase.forEach((ex, idx) => {
-                let totalQ = ex.questions.length;
-                let randomInfo = (ex.randomCount && ex.randomCount < totalQ) ? ` (Bốc ngẫu nhiên ${ex.randomCount}/${totalQ} câu)` : ` (${totalQ} câu)`;
+                let totalInBank = ex.questions.length;
+                let pickCount = ex.randomCount || totalInBank;
                 listContainer.innerHTML += `
                     <div class="exam-item">
                         <div>
                             <h3 style="margin-bottom: 4px;">${ex.title}</h3>
-                            <p style="font-size: 0.9rem; color: var(--text-muted);">⏱️ Thời gian: ${ex.time} phút | ❓ Số câu: ${randomInfo}</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">⏱️ Thời gian: ${ex.time} phút | 📚 Kho: ${totalInBank} câu (Làm ${pickCount} câu ngẫu nhiên)</p>
                         </div>
                         <button type="button" class="btn" style="width: auto;" onclick="startDoingExam(${idx})">Vào Làm Bài</button>
                     </div>
@@ -492,10 +440,7 @@
             let timeVal = parseInt(document.getElementById('exam-time-input').value) || 15;
             let randomCountVal = parseInt(document.getElementById('exam-random-count').value) || 0;
 
-            if (!titleVal) {
-                alert("Vui lòng nhập tên đề thi!");
-                return;
-            }
+            if (!titleVal) { alert("Vui lòng nhập tên đề!"); return; }
 
             let questionCards = document.querySelectorAll('.q-builder-item');
             let parsedQuestions = [];
@@ -517,49 +462,45 @@
                 }
             });
 
-            if (parsedQuestions.length === 0) {
-                alert("Vui lòng nhập ít nhất 1 câu hỏi hoàn chỉnh!");
+            if (parsedQuestions.length === 0) { alert("Nhập ít nhất 1 câu hỏi!"); return; }
+            if (randomCountVal > parsedQuestions.length) {
+                alert("Số câu lấy ngẫu nhiên không được lớn hơn tổng số câu trong kho!");
                 return;
             }
+
+            let finalRandom = (randomCountVal > 0) ? randomCountVal : parsedQuestions.length;
 
             examDatabase.push({
                 id: Date.now(),
                 title: titleVal,
                 time: timeVal,
-                randomCount: (randomCountVal > 0 && randomCountVal <= parsedQuestions.length) ? randomCountVal : parsedQuestions.length,
+                randomCount: finalRandom,
                 questions: parsedQuestions
             });
 
-            localStorage.setItem('db_exams_v13', JSON.stringify(examDatabase));
-            alert("Lưu đề thi thành công!");
+            localStorage.setItem('db_exams_v15', JSON.stringify(examDatabase));
+            alert("Lưu kho đề thành công!");
             location.reload();
         }
 
-        // HÀM TRỘN VÀ BỐC NGẪU NHÂN CÂU HỎI
-        function shuffleArray(array) {
-            let arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
+        function getRandomQuestions(arr, n) {
+            let shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, n);
         }
 
         function startDoingExam(index) {
             workingExam = examDatabase[index];
             studentAnswersMap = {};
 
-            // Xáo trộn và lấy số câu ngẫu nhiên theo cấu hình của giáo viên
-            let shuffled = shuffleArray(workingExam.questions);
-            let pickCount = workingExam.randomCount || shuffled.length;
-            currentQuestionsList = shuffled.slice(0, pickCount);
+            let pickNum = workingExam.randomCount || workingExam.questions.length;
+            activeQuestionsSet = getRandomQuestions(workingExam.questions, pickNum);
 
             document.getElementById('dashboard-section').style.display = 'none';
             document.getElementById('quiz-taking-section').style.display = 'block';
-            document.getElementById('active-exam-heading').textContent = workingExam.title;
+            document.getElementById('active-exam-heading').textContent = `${workingExam.title} (Làm ${activeQuestionsSet.length} câu ngẫu nhiên)`;
 
             let renderHtml = '';
-            currentQuestionsList.forEach((q, qIdx) => {
+            activeQuestionsSet.forEach((q, qIdx) => {
                 renderHtml += `
                     <div style="margin-bottom: 28px;">
                         <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 12px;">Câu ${qIdx + 1}: ${q.question}</div>
@@ -576,7 +517,6 @@
             });
             document.getElementById('quiz-questions-area').innerHTML = renderHtml;
 
-            // Đồng hồ đếm ngược thời gian
             let secondsLeft = workingExam.time * 60;
             liveTimerInterval = setInterval(() => {
                 let m = Math.floor(secondsLeft / 60);
@@ -591,13 +531,12 @@
             }, 1000);
         }
 
-        // Nộp bài thi và chấm điểm
         function submitCompletedQuiz() {
             clearInterval(liveTimerInterval);
             let totalScoreEarned = 0;
             let reviewReportHtml = '<h3 style="margin-bottom: 16px;">Chi tiết đáp án:</h3>';
 
-            currentQuestionsList.forEach((q, qIdx) => {
+            activeQuestionsSet.forEach((q, qIdx) => {
                 let chosenOption = studentAnswersMap[qIdx];
                 let isAnswerCorrect = chosenOption === q.correct;
                 if (isAnswerCorrect) totalScoreEarned++;
@@ -613,11 +552,10 @@
 
             document.getElementById('quiz-taking-section').style.display = 'none';
             document.getElementById('result-score-section').style.display = 'block';
-            document.getElementById('final-score-number').textContent = `${totalScoreEarned} / ${currentQuestionsList.length}`;
+            document.getElementById('final-score-number').textContent = `${totalScoreEarned} / ${activeQuestionsSet.length}`;
             document.getElementById('detailed-answers-review').innerHTML = reviewReportHtml;
         }
 
-        // Tự động khôi phục trạng thái nếu đã đăng nhập trước đó
         if (activeUserSession) {
             loadDashboard();
         }
