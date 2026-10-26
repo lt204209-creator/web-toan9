@@ -13,215 +13,152 @@
             --text: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
-            --success: #22c55e;
             --danger: #ef4444;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 40px 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; }
+        header { text-align: center; margin-bottom: 30px; position: relative; }
+        header h1 { font-size: 2rem; color: var(--primary); margin-bottom: 8px; }
+        .user-badge { position: absolute; right: 0; top: 0; background: #eef2ff; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 24px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); width: auto; }
+        .btn-outline:hover { background: #eef2ff; }
+        .btn-link { background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: underline; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 0.95rem; }
+        .error-msg { background: #fef2f2; color: var(--danger); padding: 10px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 16px; text-align: center; border: 1px solid #fecaca; display: none; }
+        .exam-item { border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    <div class="container">
+        <header>
+            <h1>Hệ Thống Trắc Nghiệm Trực Tuyến</h1>
+            <p>Nền tảng kiểm tra kiến thức thông minh</p>
+            <div id="user-info-bar" style="display: none;">
+                <span class="user-badge" id="current-user-badge"></span>
+                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; margin-top: 6px;" onclick="logout()">Đăng Xuất</button>
+            </div>
+        </header>
+
+        <!-- FORM ĐĂNG NHẬP -->
+        <div id="login-card" class="card" style="max-width: 400px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 20px;">Đăng Nhập Hệ Thống</h2>
+            <div id="login-err" class="error-msg"></div>
+            <div class="form-group">
+                <label>Tên đăng nhập:</label>
+                <input type="text" id="log-user" placeholder="Nhập username...">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu:</label>
+                <input type="password" id="log-pass" placeholder="Nhập mật khẩu...">
+            </div>
+            <button class="btn" onclick="submitLogin()">Đăng Nhập</button>
+            <div style="text-align: center; margin-top: 16px; font-size: 0.95rem; color: var(--text-muted);">
+                Học sinh chưa có tài khoản? <button type="button" class="btn-link" onclick="showRegister()">Đăng ký ngay</button>
+            </div>
+        </div>
+
+        <!-- FORM ĐĂNG KÝ -->
+        <div id="register-card" class="card" style="max-width: 400px; margin: 0 auto; display: none;">
+            <h2 style="text-align: center; margin-bottom: 20px;">Đăng Ký Học Sinh</h2>
+            <div id="reg-err" class="error-msg"></div>
+            <div class="form-group">
+                <label>Tên đăng nhập mới:</label>
+                <input type="text" id="reg-user" placeholder="Nhập username...">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu:</label>
+                <input type="password" id="reg-pass" placeholder="Nhập mật khẩu...">
+            </div>
+            <button class="btn" onclick="submitRegister()">Đăng Ký Tài Khoản</button>
+            <div style="text-align: center; margin-top: 16px; font-size: 0.95rem; color: var(--text-muted);">
+                Đã có tài khoản? <button type="button" class="btn-link" onclick="showLogin()">Đăng nhập tại đây</button>
+            </div>
+        </div>
+
+        <!-- GIAO DIỆN CHÍNH (ĐỀ THI & TẠO ĐỀ) -->
+        <div id="main-screen" style="display: none;">
+            <div id="teacher-box" class="card" style="display: none; border-left: 6px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="color: var(--primary);">🛠️ Chào Thầy Trí - Bảng Quản Trị</h3>
+                    <button class="btn btn-outline" onclick="toggleCreateBox()" style="width: auto;">+ Soạn Đề Mới</button>
+                </div>
+                <div id="create-form" style="display: none; margin-top: 20px; background: #f1f5f9; padding: 16px; border-radius: 10px;">
+                    <h4>Tạo Đề Thi Trắc Nghiệm</h4>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Tên đề thi:</label>
+                        <input type="text" id="new-title" placeholder="VD: Kiểm tra 15 phút">
+                    </div>
+                    <div class="form-group">
+                        <label>Thời gian (phút):</label>
+                        <input type="number" id="new-time" value="15">
+                    </div>
+                    <div id="questions-container"></div>
+                    <button class="btn btn-outline" onclick="addQField()" style="width: 100%; margin: 10px 0;">+ Thêm Câu Hỏi</button>
+                    <button class="btn" onclick="saveExam()">Lưu Đề Lên Hệ Thống</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Danh Sách Đề Thi</h2>
+                <div id="exam-list" style="margin-top: 16px;"></div>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH LÀM BÀI -->
+        <div id="quiz-screen" class="card" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 20px;">
+                <h2 id="quiz-title">Tên Đề</h2>
+                <div id="timer" style="font-weight: 700; color: var(--danger);">⏱️ <span id="time-clock">00:00</span></div>
+            </div>
+            <div id="quiz-questions"></div>
+            <button class="btn" onclick="submitQuiz()" style="margin-top: 20px;">Nộp Bài Thi</button>
+        </div>
+
+        <!-- MÀN HÌNH KẾT QUẢ -->
+        <div id="result-screen" class="card" style="display: none; text-align: center;">
+            <h2>Kết Quả Bài Làm</h2>
+            <div style="font-size: 3rem; font-weight: 800; color: var(--primary); margin: 16px 0;" id="score-display">0/0</div>
+            <div id="review-area" style="text-align: left; margin-top: 20px;"></div>
+            <button class="btn" onclick="location.reload()" style="margin-top: 20px; width: auto; display: inline-flex;">Về Trang Chủ</button>
+        </div>
+
+    </div>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem('db_students_v9')) || [];
+        let exams = JSON.parse(localStorage.getItem('db_exams_v9')) || [
+            {
+                id: 1, title: "Đề Thi Khởi Động Hóa Học", time: 15,
+                questions: [
+                    { question: "Công thức của nước là gì?", options: ["CO2", "H2O", "NaCl", "HCl"], correct: 1 },
+                    { question: "Kim loại nào nhẹ nhất?", options: ["Na", "Li", "K", "Al"], correct: 1 }
+                ]
+            }
+        ];
+        let currentUser = JSON.parse(localStorage.getItem('db_user_v9')) || null;
+        let currentExam = null, userAns = {}, timerObj = null;
+
+        function showRegister() {
+            document.getElementById('login-card').style.display = 'none';
+            document.getElementById('register-card').style.display = 'block';
+        }
+        function showLogin() {
+            document.getElementById('register-card').style.display = 'none';
+            document.getElementById('login-card').style.display = 'block';
         }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-        }
+        function submitRegister() {
+            let u = document.getElementById('reg-user').value.trim();
+            let p = document.getElementById('reg-pass').value.trim();
+            let err = document.getElementById('reg-err');
+            err.style.display = 'none';
 
-        .container {
-            width: 100%;
-            max-width: 800px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        header h1 {
-            font-size: 2rem;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        header p {
-            color: var(--text-muted);
-        }
-
-        .user-badge {
-            position: absolute;
-            right: 0;
-            top: 0;
-            font-size: 0.9rem;
-            background: #eef2ff;
-            color: var(--primary);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            border: 1px solid var(--border);
-            margin-bottom: 24px;
-        }
-
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-        }
-
-        .btn-outline:hover {
-            background: #eef2ff;
-            color: var(--primary-hover);
-        }
-
-        .btn-link {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.95rem;
-            text-decoration: underline;
-            padding: 0;
-        }
-
-        .btn-link:hover {
-            color: var(--primary-hover);
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 6px;
-            font-size: 0.95rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.95rem;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: var(--primary);
-        }
-
-        .exam-item {
-            border: 1px solid var(--border);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: border-color 0.2s;
-        }
-
-        .exam-item:hover {
-            border-color: var(--primary);
-        }
-
-        .error-msg {
-            background: #fef2f2;
-            color: var(--danger);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            margin-bottom: 16px;
-            text-align: center;
-            border: 1px solid #fecaca;
-            display: none;
-        }
-
-        .quiz-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 16px;
-            margin-bottom: 24px;
-        }
-
-        #timer {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--danger);
-            background: #fef2f2;
-            padding: 6px 14px;
-            border-radius: 20px;
-        }
-
-        .question-card {
-            margin-bottom: 28px;
-        }
-
-        .question-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 14px;
-        }
-
-        .options {
-            display: grid;
-            gap: 10px;
-        }
-
-        .option-label {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-        }
-
-        .option-label:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-        }
-
-        .option-label input {
-            margin-right: 12px;
-            accent-color:
+            if (!u || !p) { err.textContent = "Vui lòng nhập đầy đủ!"; err.style.display = 'block'; return; }
+            if (u === "Trí") { err.textContent = "Tên này thuộc về giáo viên!"; err.style.display = 'block'; return
